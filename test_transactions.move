@@ -1,1 +1,0 @@
-// Sample script to simulate proposal + donate + end round
