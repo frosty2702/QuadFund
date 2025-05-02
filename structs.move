@@ -1,1 +1,0 @@
-// Define Proposal, GrantRound, etc.
