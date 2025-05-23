@@ -1,0 +1,10 @@
+[package]
+name = "quadfund"
+version = "0.1.0"
+published-at = ""
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+
+[addresses]
+quadfund = "0x0" 
