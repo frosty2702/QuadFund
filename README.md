@@ -65,17 +65,9 @@ Backend / Smart Contracts
 * Sui Testnet
 * Deployed contract: `0x<your_package_id>`
 
- Design & Tooling
-
-* [Figma](https://figma.com) — UI design
-* [Excalidraw](https://excalidraw.com) — Architecture diagrams
-* [Cursor AI](https://cursor.sh) — AI pair programming
-
----
-
  **How It Works**
 
-
+![Image](https://github.com/user-attachments/assets/ba8c2b33-54af-46b1-8c7b-599de604cda3)
 
 > **Flow Summary**:
 > → Creator submits proposal
