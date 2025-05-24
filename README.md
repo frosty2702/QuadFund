@@ -29,7 +29,7 @@
 
 This ensures that **popular support, not deep pockets, decides what gets funded.**
 
-**Live Demo**
+**Live Demo:**
 https://quadfundsui.vercel.app/index
 
 You can:
@@ -41,7 +41,7 @@ You can:
 
 ---
 
-## **Key Features**
+## **Key Features:**
 
 * **Quadratic Voting:** 1 vote = 1 SUI, 2 votes = 4 SUI, etc.
 * **Milestone-Based Funding:** Funds released as creators hit goals.
