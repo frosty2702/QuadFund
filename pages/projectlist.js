@@ -7,6 +7,7 @@ export default function ProjectListPage() {
   const account = useCurrentAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+<<<<<<< Updated upstream
   // Project data for the cards
   const projects = [
     {
@@ -28,6 +29,44 @@ export default function ProjectListPage() {
       requestedAmount: "175 SUI"
     }
   ];
+=======
+  // Fetch projects from Firestore
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const projectsQuery = query(
+          collection(db, "projects"), 
+          orderBy("createdAt", "desc")
+        );
+        
+        const querySnapshot = await getDocs(projectsQuery);
+        const projectsList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          // Format the createdAt timestamp
+          createdAt: doc.data().createdAt ? new Date(doc.data().createdAt.toDate()).toLocaleDateString() : 'N/A'
+        }));
+        
+        setProjects(projectsList);
+      } catch (error) {
+        console.error("Error fetching projects: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProjects();
+  }, []);
+
+  // Default project images if none are provided
+  const defaultImages = {
+    "SuiLens": "/treasurechest.png",
+    "PixelMint": "/pixelmint.png",
+    "QuestLoop": "/questloop.png",
+    "default": "/treasurechest.png"
+  };
+>>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen bg-white font-jakarta flex flex-col">

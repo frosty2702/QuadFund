@@ -27,6 +27,7 @@ export default function ProjectsPage() {
   // Calculate progress percentage for the progress bar
   const progressPercentage = Math.min(100, Math.round((raisedAmount / totalAmount) * 100));
 
+<<<<<<< Updated upstream
   // Dynamic project data based on current state
   const projectData = {
     title: 'SuiLens',
@@ -56,6 +57,14 @@ export default function ProjectsPage() {
         amount: '100 SUI Locked'
       }
     ]
+=======
+  // Default images
+  const defaultImages = {
+    "SuiLens": "/treasurechest.png",
+    "PixelMint": "/pixelmint.png",
+    "QuestLoop": "/questloop.png",
+    "default": "/treasurechest.png"
+>>>>>>> Stashed changes
   };
 
   return (
