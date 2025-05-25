@@ -173,7 +173,7 @@ export default function ProjectListPage() {
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold mb-6 border-b pb-2 text-black font-jakarta">
-          Current Round: April-May 2024
+          Current Round: April-May 2025
         </h2>
         
         {/* Loading State */}
