@@ -2,10 +2,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton } from '@mysten/dapp-kit';
-import Navigation from '../components/Navigation';
 
 export default function Homepage() {
   const [view, setView] = useState('donor'); // 'donor' or 'creator'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const donorContent = {
     steps: [
@@ -59,33 +59,109 @@ export default function Homepage() {
 
   return (
     <div className="min-h-screen bg-white font-jakarta">
-      <Navigation activePage="home" />
+      {/* Navigation */}
+      <nav className="flex items-center px-4 sm:px-8 py-4 relative bg-[#F0992A]">
+        <Link 
+          href="/" 
+          style={{ 
+            fontFamily: '"Press Start 2P", cursive',
+            color: 'white'
+          }}
+          className="text-xl sm:text-2xl font-bold w-1/4"
+        >
+          QuadFund
+        </Link>
+        
+        {/* Desktop Navigation - Centered */}
+        <div className="hidden md:flex items-center justify-center gap-[75px] flex-1">
+          <Link 
+            href="/homepage" 
+            className="text-white no-underline border-b-2 border-transparent hover:border-white pb-1 transition-colors font-jakarta"
+          >
+            Home
+          </Link>
+          <Link 
+            href="/projectlist" 
+            className="text-white no-underline border-b-2 border-transparent hover:border-white pb-1 transition-colors font-jakarta"
+          >
+            Projects
+          </Link>
+          <Link 
+            href="/submissions" 
+            className="text-white no-underline border-b-2 border-transparent hover:border-white pb-1 transition-colors font-jakarta"
+          >
+            Submissions
+          </Link>
+          <Link 
+            href="/profile" 
+            className="text-white no-underline border-b-2 border-transparent hover:border-white pb-1 transition-colors font-jakarta"
+          >
+            Profile
+          </Link>
+          <Link 
+            href="/contact" 
+            className="text-white no-underline border-b-2 border-transparent hover:border-white pb-1 transition-colors font-jakarta"
+          >
+            Contact
+          </Link>
+        </div>
+        
+        {/* Wallet Connect - Right aligned */}
+        <div className="hidden md:block w-1/4 text-right">
+          <ConnectButton />
+        </div>
+        
+        {/* Mobile menu button */}
+        <button 
+          className="md:hidden ml-auto flex items-center text-white"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+          </svg>
+        </button>
+        
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#F0992A] z-50 border-b shadow-lg md:hidden">
+            <div className="flex flex-col p-4 space-y-4">
+              <Link href="/homepage" className="text-white hover:text-white hover:border-b-2 hover:border-white pb-1 transition-all font-jakarta">Home</Link>
+              <Link href="/projectlist" className="text-white hover:text-white hover:border-b-2 hover:border-white pb-1 transition-all font-jakarta">Projects</Link>
+              <Link href="/submissions" className="text-white hover:text-white hover:border-b-2 hover:border-white pb-1 transition-all font-jakarta">Submissions</Link>
+              <Link href="/profile" className="text-white hover:text-white hover:border-b-2 hover:border-white pb-1 transition-all font-jakarta">Profile</Link>
+              <Link href="/contact" className="text-white hover:text-white hover:border-b-2 hover:border-white pb-1 transition-all font-jakarta">Contact</Link>
+              <div className="pt-2">
+                <ConnectButton />
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
 
       {/* Hero Section */}
-      <div className="bg-[#F0992A] py-6 sm:py-8 md:py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+      <div className="bg-[#F0992A] py-8 sm:py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="max-w-xl w-full">
-            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-2 sm:mb-3 md:mb-4 text-white">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 text-white">
               Fund the Future, One Vote at a Time.
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-white">
+            <p className="text-base sm:text-lg text-white">
               QuadFund is a decentralized grant platform built on Sui, designed to empower creators through fair community-driven funding. We put power in your hands: every vote helps to build ideas that matter.
             </p>
           </div>
-          <div className="relative w-full md:w-96 h-40 sm:h-48 md:h-72">
+          <div className="relative w-full md:w-96 h-48 sm:h-72">
             <Image
               src="/hero-illustration.png"
               alt="QuadFund Illustration"
               fill
               className="object-contain"
-              priority
             />
           </div>
         </div>
       </div>
 
       {/* About Section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8 md:py-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
         <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-center text-black" style={{ fontFamily: '"Press Start 2P", cursive' }}>About QuadFund</h2>
         <p className="text-base sm:text-lg mb-8 sm:mb-12 text-black text-center font-jakarta">
           QuadFund is a decentralized grant platform built on the Sui blockchain, designed to empower creators through fair, community-driven funding. Built on Web3's values of transparency, openness, and innovation, QuadFund makes it easy for donors to fund bold ideas and for creators to bring them to life.
@@ -96,26 +172,26 @@ export default function Homepage() {
           <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-black" style={{ fontFamily: '"Press Start 2P", cursive' }}>How QuadFund Works</h2>
           
           {/* Toggle Buttons */}
-          <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-12 justify-center">
+          <div className="flex gap-2 sm:gap-4 mb-8 sm:mb-12 justify-center">
             <button
               onClick={() => setView('donor')}
-              className={`px-3 sm:px-4 md:px-8 py-2 md:py-3 rounded-full text-sm md:text-base font-medium transition-colors w-28 sm:w-32 md:w-40 ${
+              className={`px-4 sm:px-8 py-3 rounded-full text-base sm:text-lg font-medium transition-colors w-32 sm:w-40 ${
                 view === 'donor'
                   ? 'bg-[#F0992A] text-white'
                   : 'bg-white border border-[#F0992A] text-[#F0992A]'
               }`}
-              style={{ fontFamily: '"Press Start 2P", cursive', fontSize: '0.65rem', '@media (min-width: 640px)': { fontSize: '0.75rem' } }}
+              style={{ fontFamily: '"Press Start 2P", cursive', fontSize: '0.75rem' }}
             >
               Donor
             </button>
             <button
               onClick={() => setView('creator')}
-              className={`px-3 sm:px-4 md:px-8 py-2 md:py-3 rounded-full text-sm md:text-base font-medium transition-colors w-28 sm:w-32 md:w-40 ${
+              className={`px-4 sm:px-8 py-3 rounded-full text-base sm:text-lg font-medium transition-colors w-32 sm:w-40 ${
                 view === 'creator'
                   ? 'bg-[#F0992A] text-white'
                   : 'bg-white border border-[#F0992A] text-[#F0992A]'
               }`}
-              style={{ fontFamily: '"Press Start 2P", cursive', fontSize: '0.65rem', '@media (min-width: 640px)': { fontSize: '0.75rem' } }}
+              style={{ fontFamily: '"Press Start 2P", cursive', fontSize: '0.75rem' }}
             >
               Creator
             </button>
@@ -132,7 +208,7 @@ export default function Homepage() {
                       <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-black">{step.title}</h3>
                       <p className="text-sm sm:text-lg whitespace-pre-line text-black font-jakarta">{step.description}</p>
                     </div>
-                    <div className="relative w-full lg:w-80 h-48 sm:h-60 flex-shrink-0">
+                    <div className="relative w-full h-60 lg:w-80 lg:h-60 flex-shrink-0 mx-auto">
                       <Image
                         src={step.image}
                         alt={step.title}
@@ -144,7 +220,7 @@ export default function Homepage() {
                 ) : (
                   /* For odd indices (1, 3, etc.), show image first then text */
                   <>
-                    <div className="relative w-full lg:w-80 h-48 sm:h-60 flex-shrink-0 order-2 lg:order-1">
+                    <div className="relative w-full h-60 lg:w-80 lg:h-60 flex-shrink-0 mx-auto order-2 lg:order-1">
                       <Image
                         src={step.image}
                         alt={step.title}

@@ -300,7 +300,7 @@ export default function SubmissionsPage() {
 
               <button
                 type="submit"
-                className="w-full bg-white text-black py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors border border-black font-bold"
+                className="w-full bg-white text-black py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors border border-black"
               >
                 Submit Project
               </button>

@@ -4,34 +4,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile optimization */
-html, body {
-  overflow-x: hidden;
-  width: 100%;
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Improve tap targets on mobile */
-button, a, input, select, textarea {
-  touch-action: manipulation;
-}
-
-/* Better font rendering */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Prevent text from getting too small on mobile */
+/* Mobile optimizations */
 @media (max-width: 640px) {
-  .font-pixel {
-    font-size: 0.7rem !important;
-    line-height: 1.6 !important;
+  /* Prevent text zoom on mobile */
+  html {
+    -webkit-text-size-adjust: 100%;
   }
   
-  input, textarea {
-    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  /* Improve tap target sizes for better mobile UX */
+  button, 
+  a, 
+  input[type="button"], 
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
   }
+  
+  /* Fix font rendering on mobile */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Add padding to help with "thumb zone" */
+  .font-jakarta {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Force image to have proper aspect ratio */
+.image-container {
+  position: relative;
+}
+
+.image-container > span {
+  position: unset !important;
+}
+
+.image-container .image {
+  object-fit: contain;
+  width: 100% !important;
+  position: relative !important;
+  height: unset !important;
 }
 
 :root {
