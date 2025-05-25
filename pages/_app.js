@@ -64,6 +64,9 @@ const GlobalErrorHandler = () => {
     const handleError = (event) => {
       const error = event.error || event.reason;
       
+      console.log('Global error caught:', error);
+      
+      // Check if this is a wallet rejection error
       if ((error?.name === 'TRPCClientError' || 
            error?.message?.includes('TRPC')) && 
           (error?.message?.includes('rejected') || 
@@ -73,6 +76,28 @@ const GlobalErrorHandler = () => {
         
         toast.info('Transaction cancelled');
         console.log('Intercepted TRPC error:', error);
+        return;
+      }
+      
+      // Catch form submission errors
+      if (error?.message?.includes('submit') || 
+          error?.message?.includes('Failed to fetch') ||
+          error?.message?.includes('processing')) {
+        
+        event.preventDefault();
+        
+        // Log detailed information
+        console.error('Form submission error detected:', {
+          message: error.message,
+          stack: error.stack,
+          type: error.name,
+          url: window.location.href
+        });
+        
+        // Check for network or server issues
+        if (error?.message?.includes('Failed to fetch') || error instanceof TypeError) {
+          toast.error('Network error. Please check your connection and try again.');
+        }
       }
     };
     
@@ -100,7 +125,30 @@ export default function App({ Component, pageProps }) {
               console.error('Wallet connection error:', error);
             }}
           >
-            <Toaster position="top-right" />
+            <Toaster 
+              position="top-center"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                  fontSize: '16px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  maxWidth: '500px',
+                },
+                success: {
+                  style: {
+                    background: '#18A957',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#E11D48',
+                  },
+                },
+              }}
+            />
             <GlobalErrorHandler />
             <Component {...pageProps} />
           </WalletProvider>

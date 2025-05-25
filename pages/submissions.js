@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
 import Image from 'next/image';
+import { toast } from 'react-hot-toast'; // Import toast for notifications
 
 export default function SubmissionsPage() {
   const account = useCurrentAccount();
@@ -15,6 +16,11 @@ export default function SubmissionsPage() {
       { text: '', unlockAmount: '' }
     ]
   });
+  const [projectImage, setProjectImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+  const [isResetingForm, setIsResetingForm] = useState(false);
 
   // Additional CSS styles for inputs to ensure text is black
   const inputStyle = {
@@ -58,11 +64,188 @@ export default function SubmissionsPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle image upload
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Only image files are allowed');
+        return;
+      }
+      
+      console.log("Selected image:", {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      
+      setProjectImage(file);
+      
+      // Create a preview URL for the selected image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove the selected image
+  const removeImage = () => {
+    setProjectImage(null);
+    setImagePreview(null);
+  };
+
+  // Add this function for form validation
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.projectTitle.trim()) {
+      errors.projectTitle = "Project title is required";
+    }
+    
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+    }
+    
+    if (!formData.grantAmount || parseFloat(formData.grantAmount) <= 0) {
+      errors.grantAmount = "Valid grant amount is required";
+    }
+    
+    // Check if milestones have valid data
+    const milestonesValid = formData.milestones.every(m => 
+      m.text.trim() && m.unlockAmount && parseFloat(m.unlockAmount) > 0
+    );
+    
+    if (!milestonesValid) {
+      errors.milestones = "All milestones must have a description and valid unlock amount";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Function to reset the form completely
+  const resetForm = () => {
+    setIsResetingForm(true);
+    
+    // Clear all form fields
+    setFormData({
+      projectTitle: '',
+      description: '',
+      grantAmount: '',
+      githubRepo: '',
+      milestones: [{ text: '', unlockAmount: '' }]
+    });
+    
+    // Clear image
+    setProjectImage(null);
+    setImagePreview(null);
+    
+    // Clear any form errors
+    setFormErrors({});
+    
+    // Set a small timeout to ensure React state updates complete
+    setTimeout(() => {
+      setIsResetingForm(false);
+    }, 100);
+  };
+
+  // Replace the handleSubmit function
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would handle the submission
-    console.log(formData);
-    // In a real app, you'd send this to your backend or smart contract
+    
+    // Validate the form
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    console.log("Starting form submission...");
+
+    try {
+      // Create a FormData object to handle the file upload
+      const submissionData = new FormData();
+      
+      // Add form data to FormData
+      submissionData.append('projectTitle', formData.projectTitle);
+      submissionData.append('description', formData.description);
+      submissionData.append('grantAmount', formData.grantAmount);
+      submissionData.append('githubRepo', formData.githubRepo || '');
+      submissionData.append('walletAddress', account?.address || '');
+      submissionData.append('milestones', JSON.stringify(formData.milestones));
+      
+      console.log("Form data prepared, sending to API...");
+      console.log("Wallet address:", account?.address || 'Not provided');
+      
+      // Add the image if it exists
+      if (projectImage) {
+        try {
+          console.log("Adding image to form data:", projectImage.name, projectImage.type, projectImage.size);
+          submissionData.append('projectImage', projectImage);
+        } catch (imageError) {
+          console.error("Error adding image to form data:", imageError);
+          // Continue without the image rather than failing the whole submission
+        }
+      } else {
+        console.log("No image selected for upload");
+      }
+
+      // Log form data keys for debugging
+      console.log("FormData keys:", [...submissionData.keys()]);
+
+      // Send the data to our API endpoint
+      const response = await fetch('/api/submit-project', {
+        method: 'POST',
+        body: submissionData,
+      });
+
+      console.log("Response status:", response.status);
+      
+      // Parse response data
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log("Response data:", responseData);
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        throw new Error("Server returned an invalid response");
+      }
+
+      if (!response.ok) {
+        const errorMessage = responseData.error || responseData.details || 'Failed to submit project';
+        console.error("Submission error:", errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      console.log("Form submission successful, resetting form...");
+      
+      // Reset form completely
+      resetForm();
+
+      // Show success message
+      toast.success('Proposal submitted for approval', {
+        duration: 4000,
+        position: 'top-center',
+      });
+      
+    } catch (error) {
+      console.error('Error submitting project:', error);
+      toast.error(`Submission failed: ${error.message}`, {
+        duration: 4000,
+        position: 'top-center',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -177,10 +360,13 @@ export default function SubmissionsPage() {
                   value={formData.projectTitle}
                   onChange={handleInputChange}
                   style={inputStyle}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border ${formErrors.projectTitle ? 'border-red-500' : 'border-black'} focus:ring-2 focus:ring-[#276CBE] text-black font-medium`}
                   placeholder="Enter project title"
                   required
                 />
+                {formErrors.projectTitle && (
+                  <p className="mt-1 text-red-500 text-sm">{formErrors.projectTitle}</p>
+                )}
               </div>
 
               <div>
@@ -194,15 +380,62 @@ export default function SubmissionsPage() {
                   onChange={handleInputChange}
                   rows={6}
                   style={inputStyle}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border ${formErrors.description ? 'border-red-500' : 'border-black'} focus:ring-2 focus:ring-[#276CBE] text-black font-medium`}
                   placeholder="Describe your project in detail"
                   required
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-red-500 text-sm">{formErrors.description}</p>
+                )}
+              </div>
+
+              {/* Image Upload Section */}
+              <div>
+                <label className="block text-lg sm:text-xl mb-2 font-bold text-black">
+                  Project Image:
+                </label>
+                <div className="bg-white p-4 rounded-lg border border-black">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={imagePreview} 
+                        alt="Project preview" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-lg">
+                      <label htmlFor="imageUpload" className="cursor-pointer flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="mt-2 text-sm text-gray-500">Click to upload an image</span>
+                      </label>
+                      <input
+                        id="imageUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs mt-1 text-black opacity-80">Recommended: Square image (1:1 ratio), max 5MB</p>
               </div>
 
               <div>
                 <label htmlFor="grantAmount" className="block text-lg sm:text-xl mb-2 font-bold text-black">
-                  Requested Grant Amount (in SUI):
+                  Grant Amount (SUI):
                 </label>
                 <input
                   type="number"
@@ -210,17 +443,19 @@ export default function SubmissionsPage() {
                   name="grantAmount"
                   value={formData.grantAmount}
                   onChange={handleInputChange}
-                  min="1"
                   style={inputStyle}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
-                  placeholder="Enter amount"
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border ${formErrors.grantAmount ? 'border-red-500' : 'border-black'} focus:ring-2 focus:ring-[#276CBE] text-black font-medium`}
+                  placeholder="Enter requested grant amount"
                   required
                 />
+                {formErrors.grantAmount && (
+                  <p className="mt-1 text-red-500 text-sm">{formErrors.grantAmount}</p>
+                )}
               </div>
 
               <div>
                 <label htmlFor="githubRepo" className="block text-lg sm:text-xl mb-2 font-bold text-black">
-                  GitHub Repository URL (optional):
+                  GitHub Repository (optional):
                 </label>
                 <input
                   type="url"
@@ -230,64 +465,73 @@ export default function SubmissionsPage() {
                   onChange={handleInputChange}
                   style={inputStyle}
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
-                  placeholder="https://github.com/username/repo"
+                  placeholder="https://github.com/yourusername/project"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-lg sm:text-xl">Milestones:</label>
+                  <label className="block text-lg sm:text-xl font-bold text-black">
+                    Project Milestones:
+                  </label>
                   <button
                     type="button"
                     onClick={addMilestone}
-                    className="bg-white text-black py-1 px-3 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors border border-black"
+                    className="text-[#276CBE] hover:text-blue-700 bg-white px-2 py-1 rounded-lg flex items-center text-sm font-medium"
                   >
-                    + Add Milestone
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    Add Milestone
                   </button>
                 </div>
-
+                <p className="text-sm mb-4 text-black opacity-80">Define clear milestones with their associated unlock amounts.</p>
+                
+                {formErrors.milestones && (
+                  <p className="mt-1 mb-3 text-red-500 text-sm">{formErrors.milestones}</p>
+                )}
+                
                 <div className="space-y-4">
                   {formData.milestones.map((milestone, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-lg">
-                      <div className="flex-grow">
-                        <label htmlFor={`milestone-${index}`} className="block text-sm mb-1 font-bold text-black">
+                    <div key={index} className="flex flex-col sm:flex-row gap-4 p-3 sm:p-4 bg-white rounded-lg border border-black">
+                      <div className="flex-1">
+                        <label htmlFor={`milestone-${index}`} className="block mb-1 font-medium text-black">
                           Milestone Description:
                         </label>
                         <textarea
                           id={`milestone-${index}`}
                           value={milestone.text}
                           onChange={(e) => handleMilestoneChange(index, 'text', e.target.value)}
-                          rows={2}
                           style={inputStyle}
-                          className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
-                          placeholder="Describe this milestone"
+                          className="w-full px-3 py-2 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
+                          placeholder="Describe what you'll accomplish"
+                          rows={2}
                           required
                         />
                       </div>
-                      <div className="sm:w-1/4">
-                        <label htmlFor={`unlockAmount-${index}`} className="block text-sm mb-1 font-bold text-black">
-                          Unlock Amount:
+                      <div className="sm:w-1/3">
+                        <label htmlFor={`unlock-${index}`} className="block mb-1 font-medium text-black">
+                          Unlock Amount (SUI):
                         </label>
                         <div className="flex">
                           <input
                             type="number"
-                            id={`unlockAmount-${index}`}
+                            id={`unlock-${index}`}
                             value={milestone.unlockAmount}
                             onChange={(e) => handleMilestoneChange(index, 'unlockAmount', e.target.value)}
-                            min="1"
                             style={inputStyle}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
+                            className="flex-1 px-3 py-2 rounded-l-lg bg-white border border-gray-300 focus:ring-2 focus:ring-[#276CBE] text-black font-medium"
                             placeholder="Amount"
                             required
                           />
-                          {formData.milestones.length > 1 && (
+                          {index > 0 && (
                             <button
                               type="button"
                               onClick={() => removeMilestone(index)}
-                              className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+                              className="bg-red-500 hover:bg-red-600 text-white px-2 rounded-r-lg"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
                             </button>
                           )}
@@ -298,12 +542,15 @@ export default function SubmissionsPage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-white text-black py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors border border-black font-bold"
-              >
-                Submit Project
-              </button>
+              <div className="flex justify-center pt-6">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 rounded-lg text-xl font-medium bg-white text-black hover:bg-gray-100 transition border border-black ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Project'}
+                </button>
+              </div>
             </form>
           )}
         </div>
