@@ -5,6 +5,7 @@ import { SuiClientProvider, WalletProvider, createNetworkConfig } from "@mysten/
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast, Toaster } from "react-hot-toast";
 import { useEffect } from "react";
+import Head from "next/head";
 
 import { Plus_Jakarta_Sans, Press_Start_2P } from "next/font/google";
 
@@ -91,6 +92,9 @@ const GlobalErrorHandler = () => {
 export default function App({ Component, pageProps }) {
   return (
     <div className={`${plusJakarta.variable} ${pressStart.variable}`}>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <QueryClientProvider client={queryClient}>
         <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
           <WalletProvider 

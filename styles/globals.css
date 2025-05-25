@@ -4,6 +4,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile optimization */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Improve tap targets on mobile */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Better font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent text from getting too small on mobile */
+@media (max-width: 640px) {
+  .font-pixel {
+    font-size: 0.7rem !important;
+    line-height: 1.6 !important;
+  }
+  
+  input, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
