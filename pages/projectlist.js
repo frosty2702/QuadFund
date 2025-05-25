@@ -1,33 +1,68 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ProjectListPage() {
   const account = useCurrentAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Project data for the cards
-  const projects = [
+  // Fetch approved projects from the API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/get-approved-projects');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setProjects(data.projects);
+        } else {
+          throw new Error(data.error || 'Failed to fetch projects');
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProjects();
+  }, []);
+
+  // Fallback projects for development (if no approved projects yet)
+  const fallbackProjects = [
     {
       id: "suilens",
-      name: "SuiLens",
-      image: "/suilens.png",
-      requestedAmount: "320 SUI"
+      projectTitle: "SuiLens",
+      imagePath: "/suilens.png",
+      grantAmount: "320"
     },
     {
       id: "pixelmint",
-      name: "PixelMint",
-      image: "/pixelmint.png",
-      requestedAmount: "140 SUI"
+      projectTitle: "PixelMint",
+      imagePath: "/pixelmint.png",
+      grantAmount: "140"
     },
     {
       id: "questloop",
-      name: "QuestLoop",
-      image: "/questloop.png",
-      requestedAmount: "175 SUI"
+      projectTitle: "QuestLoop",
+      imagePath: "/questloop.png",
+      grantAmount: "175"
     }
   ];
+
+  // Display fallback projects if no approved projects are available
+  const displayProjects = projects.length > 0 ? projects : fallbackProjects;
 
   return (
     <div className="min-h-screen bg-white font-jakarta flex flex-col">
@@ -138,33 +173,63 @@ export default function ProjectListPage() {
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold mb-6 border-b pb-2 text-black font-jakarta">
-          April-May
+          Current Round: April-May 2024
         </h2>
         
-        {/* Project Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {projects.map((project) => (
-            <Link 
-              href={project.id === "suilens" ? "/projects" : "#"} 
-              key={project.id}
-              className="border border-black rounded-lg p-6 flex flex-col items-center hover:shadow-md transition-shadow"
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F0992A]"></div>
+          </div>
+        )}
+        
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <p>Error loading projects: {error}</p>
+          </div>
+        )}
+        
+        {/* No Projects State */}
+        {!isLoading && !error && displayProjects.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-xl font-semibold text-gray-700">No projects available yet</p>
+            <p className="mt-2 text-gray-500">Check back soon or submit your own project!</p>
+            <Link
+              href="/submissions"
+              className="mt-6 inline-block px-6 py-3 bg-[#F0992A] text-white rounded-full font-medium hover:bg-[#e08a25] transition-colors"
             >
-              <div className="relative w-40 h-40 mb-4">
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              
-              <h3 className="text-xl font-bold mb-2 text-black">{project.name}</h3>
-              <p className="text-sm text-black">
-                Requesting <span className="font-bold">{project.requestedAmount}</span>
-              </p>
+              Submit a Project
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
+        
+        {/* Project Cards */}
+        {!isLoading && !error && displayProjects.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {displayProjects.map((project) => (
+              <Link 
+                href={`/projects?id=${project.id}`}
+                key={project.id}
+                className="border border-black rounded-lg p-6 flex flex-col items-center hover:shadow-md transition-shadow"
+              >
+                <div className="relative w-40 h-40 mb-4">
+                  <Image
+                    src={project.imagePath || "/placeholder-project.png"}
+                    alt={project.projectTitle}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                
+                <h3 className="text-xl font-bold mb-2 text-black text-center">{project.projectTitle}</h3>
+                <p className="text-sm text-black">
+                  Requesting <span className="font-bold">{project.grantAmount} SUI</span>
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Footer */}

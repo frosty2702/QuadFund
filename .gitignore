@@ -31,4 +31,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts 
+next-env.d.ts
+
+# Ignore temp files
+/tmp/
+/tmp/*
+
+# Ignore uploaded files but keep the directory structure
+/public/uploads/*
+!/public/uploads/.gitkeep 
