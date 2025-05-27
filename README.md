@@ -77,7 +77,7 @@ Backend / Smart Contracts
 
 * [Move Language](https://move-language.github.io/)
 * Sui Testnet
-* Deployed contract: `0x<your_package_id>`
+* Deployed contract: `0x6541c1313d3288c12ef0ac5e77a2a990f4ab7948cfe604fc5f3929f97c81c744`
 
  **Smart Contract Overview**
 
