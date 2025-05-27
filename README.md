@@ -50,6 +50,18 @@ You can:
 
 ---
 
+
+
+ **How It Works**
+
+![Image](https://github.com/user-attachments/assets/ba8c2b33-54af-46b1-8c7b-599de604cda3)
+
+> **Flow Summary**:
+> → Creator submits proposal
+> → Donors vote using SUI (quadratic logic)
+> → Smart contract tracks funds using `get_raised()`
+> → Funds are disbursed per milestone by admin/DAO
+
 ## **Tech Stack**
 
 Frontend
@@ -64,18 +76,6 @@ Backend / Smart Contracts
 * [Move Language](https://move-language.github.io/)
 * Sui Testnet
 * Deployed contract: `0x<your_package_id>`
-
- **How It Works**
-
-![Image](https://github.com/user-attachments/assets/ba8c2b33-54af-46b1-8c7b-599de604cda3)
-
-> **Flow Summary**:
-> → Creator submits proposal
-> → Donors vote using SUI (quadratic logic)
-> → Smart contract tracks funds using `get_raised()`
-> → Funds are disbursed per milestone by admin/DAO
-
----
 
  **Smart Contract Overview**
 
