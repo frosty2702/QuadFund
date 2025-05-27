@@ -11,8 +11,8 @@
 * [Overview](#overview)
 * [Live Demo](#live-demo)
 * [Key Features](#key-features)
-* [Tech Stack](#tech-stack)
 * [How It Works](#how-it-works)
+* [Tech Stack](#tech-stack)
 * [Smart Contract Overview](#smart-contract-overview)
 * [Installation & Local Setup](#installation--local-setup)
 * [Future Roadmap](#future-roadmap)
@@ -31,6 +31,8 @@ This ensures that **popular support, not deep pockets, decides what gets funded.
 
 **Live Demo:**
 https://quadfundsui.vercel.app/index
+
+https://youtu.be/0Q8QJNI5xm4?si=HZlYI91D09gTKjx1
 
 You can:
 
