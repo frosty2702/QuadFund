@@ -2,6 +2,7 @@ import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import supabase from '../../lib/supabase';
 
 // Configure formidable to parse form data
 export const config = {
@@ -32,8 +33,7 @@ const ensureUploadDirectories = () => {
 // Ensure directories exist when this module is loaded
 ensureUploadDirectories();
 
-// In-memory database for development
-// In production, you would use a real database like MongoDB, Supabase, Firebase, etc.
+// This is kept for backward compatibility but will be deprecated in favor of Supabase
 export let projectsDB = [];
 
 export default async function handler(req, res) {
@@ -180,21 +180,66 @@ export default async function handler(req, res) {
     // Create a new project object
     const newProject = {
       id: uuidv4(),
-      projectTitle: fields.projectTitle,
+      project_title: fields.projectTitle,
       description: fields.description,
-      grantAmount: fields.grantAmount,
-      githubRepo: fields.githubRepo || '',
-      walletAddress: fields.walletAddress || '',
+      grant_amount: fields.grantAmount,
+      github_repo: fields.githubRepo || '',
+      wallet_address: fields.walletAddress ? fields.walletAddress.toString().replace(/[\[\]"]/g, '') : '', // Clean any JSON formatting
       milestones: milestones,
-      imagePath,
+      image_path: imagePath,
       status: 'pending', // pending, approved, rejected
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       votes: 0,
       approved: false, // This controls whether it's shown on the frontend
     };
+    
+    // Log the wallet address for debugging
+    console.log('Submitting project with wallet address:', newProject.wallet_address);
+    console.log('Original wallet address from form:', fields.walletAddress);
 
-    // Store in our in-memory database
-    projectsDB.push(newProject);
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([newProject])
+      .select();
+
+    if (error) {
+      console.error('Error inserting project into Supabase:', error);
+      
+      // Fallback to in-memory DB if Supabase fails
+      projectsDB.push({
+        ...newProject,
+        projectTitle: newProject.project_title,
+        grantAmount: newProject.grant_amount,
+        githubRepo: newProject.github_repo,
+        walletAddress: newProject.wallet_address,
+        imagePath: newProject.image_path,
+        createdAt: newProject.created_at
+      });
+      
+      console.log('Project added to in-memory database as fallback');
+      
+      // We'll still return success but log the error
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Project submitted successfully (in-memory fallback)',
+        projectId: newProject.id,
+        warning: 'Database connection failed, using fallback storage'
+      });
+    }
+
+    console.log('Project successfully inserted into Supabase');
+    
+    // Store in our in-memory database as well for backward compatibility
+    projectsDB.push({
+      ...newProject,
+      projectTitle: newProject.project_title,
+      grantAmount: newProject.grant_amount,
+      githubRepo: newProject.github_repo,
+      walletAddress: newProject.wallet_address,
+      imagePath: newProject.image_path,
+      createdAt: newProject.created_at
+    });
     
     // Log the new project for development purposes
     console.log('New project added to database with ID:', newProject.id);

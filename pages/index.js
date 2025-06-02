@@ -18,8 +18,9 @@ export default function LoginPage() {
     <div className="flex flex-col md:flex-row h-screen font-inter">
       {/* Left Section - Nuclear Mango */}
       <div className="w-full md:w-1/2 bg-[#F0992A] flex items-center justify-center p-6 md:p-10 min-h-[40vh] md:min-h-full">
-        <p className="text-[#276CBE] text-xl sm:text-2xl md:text-[25px] font-medium text-center md:text-left">
-          Fund the Future, One Vote at a Time.
+        <p className="text-[#276CBE] text-sm sm:text-base md:text-lg font-jakarta text-center md:text-left leading-relaxed tracking-wide">
+          Fund the Future,<br />
+          One Vote at a Time.
         </p>
       </div>
 

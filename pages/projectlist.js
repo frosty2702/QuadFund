@@ -2,36 +2,47 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function ProjectListPage() {
   const account = useCurrentAccount();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [approvedProjectId, setApprovedProjectId] = useState(null);
+  
+  // Check if there's an approved project in the URL
+  useEffect(() => {
+    // Check if we're coming from an approval action
+    if (router.query.approved) {
+      console.log('Detected newly approved project:', router.query.approved);
+      setApprovedProjectId(router.query.approved);
+      
+      // Remove the query parameter to avoid issues on refresh
+      const { approved, ...restQuery } = router.query;
+      router.replace({
+        pathname: router.pathname,
+        query: restQuery,
+      }, undefined, { shallow: true });
+    }
+  }, [router]);
   
   // Fetch approved projects from the API
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/get-approved-projects');
+        setError(null); // Reset error state
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects');
-        }
+        // Simulate loading for a short time
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
         
-        const data = await response.json();
-        
-        if (data.success) {
-          setProjects(data.projects);
-        } else {
-          throw new Error(data.error || 'Failed to fetch projects');
-        }
       } catch (error) {
-        console.error('Error fetching projects:', error);
-        setError(error.message);
-      } finally {
+        console.error('Unexpected error in fetchProjects:', error);
         setIsLoading(false);
       }
     };
@@ -61,8 +72,8 @@ export default function ProjectListPage() {
     }
   ];
 
-  // Display fallback projects if no approved projects are available
-  const displayProjects = projects.length > 0 ? projects : fallbackProjects;
+  // Always use the fallback projects instead of trying to load from Supabase
+  const displayProjects = fallbackProjects;
 
   return (
     <div className="min-h-screen bg-white font-jakarta flex flex-col">

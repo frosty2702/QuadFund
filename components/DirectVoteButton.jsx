@@ -70,7 +70,7 @@ export default function DirectVoteButton() {
       if (errorMsg.includes('balance')) {
         toast.error('Insufficient balance for donation');
       } else if (errorMsg.includes('canceled')) {
-        toast.info('Transaction canceled');
+        toast('Transaction canceled');
       } else {
         toast.error(`Error: ${errorMsg}`);
       }

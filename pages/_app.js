@@ -35,7 +35,7 @@ const queryClient = new QueryClient({
         if (error?.message?.includes('rejected') || 
             error?.message?.includes('cancel') ||
             error?.message?.includes('User rejected')) {
-          toast.info('Transaction cancelled');
+          toast('Transaction cancelled');
           console.log('User cancelled transaction:', error);
           return;
         }
@@ -48,7 +48,7 @@ const queryClient = new QueryClient({
         if (error?.message?.includes('rejected') || 
             error?.message?.includes('cancel') ||
             error?.message?.includes('User rejected')) {
-          toast.info('Transaction cancelled');
+          toast('Transaction cancelled');
           console.log('User cancelled transaction:', error);
           return;
         }
@@ -74,7 +74,7 @@ const GlobalErrorHandler = () => {
         
         event.preventDefault();
         
-        toast.info('Transaction cancelled');
+        toast('Transaction cancelled');
         console.log('Intercepted TRPC error:', error);
         return;
       }

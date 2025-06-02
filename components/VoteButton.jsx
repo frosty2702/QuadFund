@@ -331,6 +331,32 @@ export default function VoteButton({ onSuccessfulVote }) {
         const updatedAmount = (raised || 0) + quadraticCost;
         setRaised(updatedAmount);
         
+        // Update votes in Supabase database
+        try {
+          const response = await fetch('/api/update-votes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              projectId: PROJECT_ID,
+              voteAmount: quadraticCost, // Using the quadratic cost as the vote amount
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            console.error('Failed to update votes in database:', data.error);
+          } else {
+            console.log('Votes updated in database:', data);
+          }
+        } catch (dbError) {
+          console.error('Error updating votes in database:', dbError);
+          // We don't fail the transaction if the database update fails
+          // The blockchain transaction was already successful
+        }
+        
         if (onSuccessfulVote) {
           onSuccessfulVote(quadraticCost, null);
         }
@@ -346,7 +372,7 @@ export default function VoteButton({ onSuccessfulVote }) {
       
       // Check if this is a user rejection/cancellation
       if (isUserRejection(error)) {
-        toast.info('Transaction cancelled');
+        toast('Transaction cancelled');
         console.log('User cancelled the transaction');
       } 
       // Check if this is an insufficient balance error

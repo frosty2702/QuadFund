@@ -10,6 +10,7 @@ module.exports = {
         fontFamily: {
           jakarta: ['Plus Jakarta Sans', 'sans-serif'],
           pixel: ['"Press Start 2P"', 'cursive'],
+          'press-start': ['"Press Start 2P"', 'cursive'],
         },
       },
     },

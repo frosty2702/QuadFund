@@ -5,13 +5,107 @@ import VoteButton from '../components/VoteButton';
 import TestTxButton from '../components/TestTxButton';
 import SimpleVoteButton from '../components/SimpleVoteButton';
 import DirectVoteButton from '../components/DirectVoteButton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function ProjectsPage() {
   const account = useCurrentAccount();
+  const router = useRouter();
+  const { id } = router.query;
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [raisedAmount, setRaisedAmount] = useState(94); // Starting amount in SUI
-  const [totalAmount] = useState(320); // Total goal in SUI
+  const [raisedAmount, setRaisedAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [project, setProject] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch project data
+  useEffect(() => {
+    if (id) {
+      fetchProjectData();
+    } else if (router.isReady) {
+      // If no ID is provided but router is ready, use a default ID
+      router.push('/projects?id=suilens');
+    }
+  }, [id, router.isReady]);
+  
+  const fetchProjectData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // First try to get from API for user-created projects
+      const response = await fetch(`/api/get-project?id=${id}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.project) {
+          // We found the project in our database
+          const fetchedProject = data.project;
+          
+          // Set project state
+          setProject(fetchedProject);
+          
+          // Set raised amount from votes
+          setRaisedAmount(parseInt(fetchedProject.votes || 0));
+          
+          // Set total amount from grant amount
+          setTotalAmount(parseInt(fetchedProject.grantAmount || 320));
+          
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // If we couldn't find the project in our database, use the fallback
+      // For the demo "suilens" project
+      if (id === 'suilens') {
+        const fallbackProject = {
+          id: 'suilens',
+          projectTitle: 'SuiLens',
+          description: 'SuiLens is a live DeFi analytics dashboard designed to help users track protocol health, wallet behavior, TVL, and whale movements on Sui blockchain. It provides real-time charts, wallet profiles, and custom alerts, turning raw blockchain data into actionable insights for DeFi users, investors, and builders. With the explosive growth of Sui, SuiLens brings clarity, transparency, and better decision-making to everyone in the ecosystem.',
+          grantAmount: '320',
+          githubRepo: 'https://github.com/suilabs/suilens',
+          milestones: [
+            {
+              text: 'Set up basic data feed from Sui and display TVL + wallet balances.',
+              status: 'completed',
+              amount: '80 SUI Unlocked'
+            },
+            {
+              text: 'Build live dashboard interface with charts and real-time updates.',
+              status: 'pending',
+              amount: '80 SUI Locked'
+            },
+            {
+              text: 'Add alert feed and basic wallet analytics page.',
+              status: 'pending',
+              amount: '60 SUI Locked'
+            },
+            {
+              text: 'Display demo chart or alert snippet on QuadFund project page.',
+              status: 'pending',
+              amount: '100 SUI Locked'
+            }
+          ],
+          votes: 94, // Default votes for the demo
+          imagePath: '/suilens.png'
+        };
+        
+        setProject(fallbackProject);
+        setRaisedAmount(fallbackProject.votes);
+        setTotalAmount(parseInt(fallbackProject.grantAmount));
+      } else {
+        setError('Project not found');
+      }
+    } catch (fetchError) {
+      console.error('Error fetching project:', fetchError);
+      setError('Failed to load project data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Update the raised amount when a vote is successful
   const handleSuccessfulVote = (voteAmount, updatedTotalFromContract) => {
@@ -27,35 +121,83 @@ export default function ProjectsPage() {
   // Calculate progress percentage for the progress bar
   const progressPercentage = Math.min(100, Math.round((raisedAmount / totalAmount) * 100));
 
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white font-jakarta flex flex-col">
+        {/* Navigation */}
+        <nav className="flex items-center px-4 sm:px-8 py-4 border-b border-black relative">
+          <Link 
+            href="/" 
+            style={{ 
+              fontFamily: '"Press Start 2P", cursive',
+              color: 'black'
+            }}
+            className="text-xl sm:text-2xl font-bold w-1/4"
+          >
+            QuadFund
+          </Link>
+          <div className="hidden md:block w-1/4 text-right ml-auto">
+            <ConnectButton />
+          </div>
+        </nav>
+        
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F0992A]"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // If error, show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white font-jakarta flex flex-col">
+        {/* Navigation */}
+        <nav className="flex items-center px-4 sm:px-8 py-4 border-b border-black relative">
+          <Link 
+            href="/" 
+            style={{ 
+              fontFamily: '"Press Start 2P", cursive',
+              color: 'black'
+            }}
+            className="text-xl sm:text-2xl font-bold w-1/4"
+          >
+            QuadFund
+          </Link>
+          <div className="hidden md:block w-1/4 text-right ml-auto">
+            <ConnectButton />
+          </div>
+        </nav>
+        
+        <div className="flex-grow flex items-center justify-center flex-col p-8">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-black">{error}</p>
+          <Link 
+            href="/projectlist" 
+            className="mt-6 px-6 py-3 bg-[#F0992A] text-white rounded-lg hover:bg-[#E08819] transition-colors"
+          >
+            Back to Projects
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  // Ensure project is available
+  if (!project) {
+    return null;
+  }
+  
   // Dynamic project data based on current state
   const projectData = {
-    title: 'SuiLens',
-    description: 'SuiLens is a live DeFi analytics dashboard designed to help users track protocol health, wallet behavior, TVL, and whale movements on Sui blockchain. It provides real-time charts, wallet profiles, and custom alerts, turning raw blockchain data into actionable insights for DeFi users, investors, and builders. With the explosive growth of Sui, SuiLens brings clarity, transparency, and better decision-making to everyone in the ecosystem.',
+    title: project.projectTitle,
+    description: project.description,
     requestedGrant: `${totalAmount} SUI`,
     raisedAmount: `${raisedAmount}/${totalAmount} SUI Raised`,
-    githubRepo: 'https://github.com/suilabs/suilens',
-    milestones: [
-      {
-        text: 'Set up basic data feed from Sui and display TVL + wallet balances.',
-        status: 'completed',
-        amount: '80 SUI Unlocked'
-      },
-      {
-        text: 'Build live dashboard interface with charts and real-time updates.',
-        status: 'pending',
-        amount: '80 SUI Locked'
-      },
-      {
-        text: 'Add alert feed and basic wallet analytics page.',
-        status: 'pending',
-        amount: '60 SUI Locked'
-      },
-      {
-        text: 'Display demo chart or alert snippet on QuadFund project page.',
-        status: 'pending',
-        amount: '100 SUI Locked'
-      }
-    ]
+    githubRepo: project.githubRepo || 'https://github.com/suilabs/suilens',
+    milestones: project.milestones || [],
+    imagePath: project.imagePath || '/suilens.png'
   };
 
   return (
@@ -216,8 +358,8 @@ export default function ProjectsPage() {
           <div className="flex flex-col items-center mt-8 lg:mt-0">
             <div className="mb-6 sm:mb-8 relative w-full aspect-[4/3] max-w-md">
               <Image
-                src="/suilens.png" 
-                alt="Analytics Dashboard"
+                src={projectData.imagePath} 
+                alt={projectData.title}
                 fill
                 className="object-contain"
                 priority
