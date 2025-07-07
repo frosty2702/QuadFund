@@ -14,21 +14,13 @@ CREATE TABLE IF NOT EXISTS projects (
   approved BOOLEAN DEFAULT false
 );
 
--- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_projects_wallet ON projects(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_projects_approved ON projects(approved);
 
--- RLS (Row Level Security) Policies
--- These will be important when you integrate with Supabase Auth
 
--- Allow anyone to view approved projects
 CREATE POLICY "Allow anyone to view approved projects"
   ON projects
   FOR SELECT
   USING (approved = true);
 
--- In the future, you might want to add more policies like:
--- 1. Only allow users to view their own unapproved projects
--- 2. Only allow admins to approve projects
--- 3. Only allow project owners to update their own projects 
